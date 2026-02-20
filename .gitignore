@@ -1,0 +1,5 @@
+## General pnpm / workspace ignores
+.pnpm-store/
+.pnpm/
+pnpm-debug.log*
+
