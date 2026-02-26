@@ -12,7 +12,7 @@ export function useDragAndDrop(listId: number, items: TodoItem[]) {
     writeOrder(listId, order)
   }, [listId, order])
 
-  const orderedItems = useMemo(() => sortByOrder(items, order), [items, order])
+  const sortedItems = useMemo(() => sortByOrder(items, order), [items, order])
 
   const resetDrag = useCallback(() => {
     dragRef.current = null
@@ -89,5 +89,5 @@ export function useDragAndDrop(listId: number, items: TodoItem[]) {
     [dragOverId])
 
 
-  return { orderedItems, bindItem, bindList, bindEndZone, isDragOver }
+  return { items: sortedItems, bindItem, bindList, bindEndZone, isDragOver }
 }

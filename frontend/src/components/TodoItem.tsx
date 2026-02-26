@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { DragProps } from '../types/drag';
 
 type TodoItemProps = {
@@ -9,7 +10,7 @@ type TodoItemProps = {
     drag: DragProps;
     isDragOver: boolean;
 }
-export const TodoItem = ({id, done, name, onDelete, onToggle, drag, isDragOver }: TodoItemProps) => {
+export const TodoItem = memo(({id, done, name, onDelete, onToggle, drag, isDragOver }: TodoItemProps) => {
     const handleOnDelete = () => {
         onDelete(id);
     }
@@ -33,4 +34,4 @@ export const TodoItem = ({id, done, name, onDelete, onToggle, drag, isDragOver }
             <button type="button" onClick={handleOnDelete} className="text-text-muted hover:text-red-500">✕</button>
         </li>
     )
-}
+})

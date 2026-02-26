@@ -10,12 +10,12 @@ type TodoListProps = {
 };
 
 export const TodoList = ({ listId, items, onToggle, onDelete }: TodoListProps) => {
-  const { orderedItems, bindItem, bindList, bindEndZone, isDragOver } = useDragAndDrop(listId, items);
+  const { items: sortedItems, bindItem, bindList, bindEndZone, isDragOver } = useDragAndDrop(listId, items);
 
   return (
     <ul className="mt-3 flex flex-1 flex-col gap-2 pb-4" {...bindList}>
-      {orderedItems.map((item) => {
-        const { ...drag } = bindItem(item.id);
+      {sortedItems.map((item) => {
+        const drag = bindItem(item.id);
         return (
           <TodoItem
             key={item.id}
