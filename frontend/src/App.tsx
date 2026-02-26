@@ -8,8 +8,8 @@ function App() {
   const { isDark, toggleTheme } = useTheme();
   const todoLists = todoListsQuery.data ?? [];
 
-  const onAdd = ({ listId, name }: { listId: number; name: string }) => {
-    addTodoItem.mutate({ listId, data: { name } });
+  const onAdd = async ({ listId, name }: { listId: number; name: string }) => {
+    await addTodoItem.mutateAsync({ listId, data: { name } });
   }
 
   const onDeleteItem = (listId: number, itemId: number) => {
