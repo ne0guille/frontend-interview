@@ -3,7 +3,7 @@ import { IsOptional, IsString } from 'class-validator';
 
 export class AddTodoItemDto {
   @ApiProperty({
-    description: 'Name of the todo item',
+    name: 'Name of the todo item',
     required: true,
     example: 'Buy milk',
   })

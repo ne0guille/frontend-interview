@@ -21,7 +21,7 @@ export const TodoItem = memo(
         <li
           ref={ref}
           style={style}
-          className={`flex items-center gap-3 rounded-lg px-3 py-2.5 min-h-[44px] hover:bg-surface-hover transition-opacity cursor-grab touch-none ${
+          className={`flex items-center gap-3 rounded-lg min-h-[44px] hover:bg-surface-hover transition-opacity cursor-grab touch-none ${
             isDragging ? 'opacity-50 scale-[1.02] shadow-lg' : ''
           }`}
           {...dragHandleProps}
@@ -31,6 +31,7 @@ export const TodoItem = memo(
               type="checkbox"
               checked={done}
               onChange={handleOnToggle}
+              aria-label={`Mark "${name}" as ${done ? 'not done' : 'done'}`}
               className="h-5 w-5 rounded-full border-input"
             />
           </label>
@@ -45,7 +46,7 @@ export const TodoItem = memo(
             type="button"
             onClick={handleOnDelete}
             className="flex w-11 h-11 shrink-0 items-center justify-center text-text-muted hover:text-red-500 touch-auto"
-            aria-label="Delete item"
+            aria-label={`Delete "${name}"`}
           >
             ✕
           </button>

@@ -1,19 +1,36 @@
-import { useCallback, useMemo } from 'react';
-import { useLocalStorage } from './useLocalStorage';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import type { TodoList } from '../types';
 
+function getTabFromURL(): number | null {
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get('tab');
+  return tab ? Number(tab) : null;
+}
+
+function setTabInURL(id: number) {
+  const params = new URLSearchParams(window.location.search);
+  params.set('tab', String(id));
+  window.history.replaceState(null, '', `?${params.toString()}`);
+}
+
 export function useActiveTab(lists: TodoList[]) {
-  const [storedId, setStoredId] = useLocalStorage<number | null>('active-tab', null);
+  const [tabId, setTabId] = useState<number | null>(getTabFromURL);
+
+  useEffect(() => {
+    const onPopState = () => setTabId(getTabFromURL());
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   const activeList = useMemo(() => {
-    const found = lists.find((l) => l.id === storedId);
+    const found = lists.find((l) => l.id === tabId);
     return found ?? lists[0] ?? null;
-  }, [lists, storedId]);
+  }, [lists, tabId]);
 
-  const setActiveTab = useCallback(
-    (id: number) => setStoredId(id),
-    [setStoredId],
-  );
+  const setActiveTab = useCallback((id: number) => {
+    setTabId(id);
+    setTabInURL(id);
+  }, []);
 
   return { activeList, activeTabId: activeList?.id ?? null, setActiveTab };
 }

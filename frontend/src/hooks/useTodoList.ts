@@ -7,7 +7,7 @@ import type {
   UpdateTodoItemDto,
 } from '../api/todo-list.dto';
 import type { TodoList } from '../types';
-import { updateItemInLists, removeItemFromLists } from '../domain/todoListUpdaters';
+import { addItemToList, updateItemInLists, removeItemFromLists } from '../domain/todoListUpdaters';
 
 const todoListsKey = ['todoLists'] as const;
 
@@ -38,7 +38,21 @@ export function useTodoList() {
   const addTodoItem = useMutation({
     mutationFn: ({ listId, data }: { listId: number; data: AddTodoItemDto }) =>
       todoListService.addTodoItem(listId, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: todoListsKey }),
+    onMutate: async ({ listId, data }) => {
+      await queryClient.cancelQueries({ queryKey: todoListsKey });
+      const previous = queryClient.getQueryData<TodoList[]>(todoListsKey);
+      const tempItem = { id: -Date.now(), name: data.name, description: '', done: false };
+      queryClient.setQueryData<TodoList[]>(todoListsKey, (old) =>
+        old ? addItemToList(old, listId, tempItem) : old
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(todoListsKey, context.previous);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: todoListsKey });
+    },
   });
 
   const updateTodoItem = useMutation({

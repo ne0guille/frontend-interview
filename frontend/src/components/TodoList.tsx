@@ -43,11 +43,11 @@ export const TodoList = ({ listId, items, onToggle, onDelete }: TodoListProps) =
     >
       <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
         {sortedItems.length === 0 ? (
-          <p className="mt-3 flex flex-1 items-center justify-center text-text-muted pb-4">
+          <p className="flex flex-1 items-center justify-center text-text-muted pb-4">
             No tasks have been entered yet
           </p>
         ) : (
-          <ul className="mt-3 flex flex-1 flex-col gap-2 pb-4">
+          <ul aria-label="Todo items" className="flex flex-1 flex-col gap-2 pb-4">
             {sortedItems.map((item) => (
               <SortableItem
                 key={item.id}

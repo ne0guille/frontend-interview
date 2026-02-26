@@ -1,4 +1,3 @@
-import './App.css'
 import { useRef } from 'react';
 import { useTodoList } from './hooks/useTodoList';
 import { useTheme } from './hooks/useTheme';
@@ -14,8 +13,8 @@ function App() {
 
   const prevTabId = useRef(activeTabId);
 
-  const onAdd = async ({ listId, name }: { listId: number; name: string }) => {
-    await addTodoItem.mutateAsync({ listId, data: { name } });
+  const onAdd = ({ listId, name }: { listId: number; name: string }) => {
+    addTodoItem.mutate({ listId, data: { name } });
   }
 
   const onDeleteItem = (listId: number, itemId: number) => {
@@ -29,12 +28,13 @@ function App() {
   };
 
   return (
-    <main className="min-h-screen bg-surface p-4 md:p-6 lg:p-8">
+    <main id="main-content" className="min-h-screen bg-surface p-4 md:p-6 lg:p-8">
       <div className="mx-auto max-w-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-text-primary">My Todos</h1>
           <button
             type="button"
+            aria-label="Toggle dark mode"
             onClick={toggleTheme}
             className="flex w-11 h-11 items-center justify-center rounded-lg bg-surface-card border border-border text-text-primary hover:bg-surface-hover"
           >
@@ -48,8 +48,11 @@ function App() {
           onTabChange={handleTabChange}
         />
 
-        {activeList && (
+        {activeList ? (
           <div
+            id="tabpanel-active"
+            role="tabpanel"
+            aria-labelledby={`tab-${activeTabId}`}
             key={activeTabId}
             className="mt-4"
             style={{
@@ -63,7 +66,7 @@ function App() {
               onDelete={onDeleteItem}
             />
           </div>
-        )}
+        ) : null}
       </div>
     </main>
   );

@@ -12,6 +12,7 @@ export function useTheme() {
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#111827' : '#f9fafb');
   }, [theme]);
 
   const toggleTheme = useCallback(() => {

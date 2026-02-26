@@ -95,7 +95,6 @@ export class TodoListsService {
 
     // Update the record
     todoItem.name = todoItemDto.name ?? todoItem.name;
-    todoItem.description = todoItemDto.description ?? todoItem.description;
     todoItem.done = todoItemDto.done ?? todoItem.done;
 
     return todoItem;

@@ -1,5 +1,17 @@
-import type { TodoList } from '../types';
+import type { TodoList, TodoItem } from '../types';
 import type { UpdateTodoItemDto } from '../api/todo-list.dto';
+
+export function addItemToList(
+  lists: TodoList[],
+  listId: number,
+  item: TodoItem,
+): TodoList[] {
+  return lists.map((list) =>
+    list.id === listId
+      ? { ...list, todoItems: [...list.todoItems, item] }
+      : list
+  );
+}
 
 export function updateItemInLists(
   lists: TodoList[],
