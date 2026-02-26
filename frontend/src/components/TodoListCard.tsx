@@ -14,17 +14,19 @@ export const TodoListCard = ({ list, onAdd, onToggle, onDelete }: TodoListCardPr
   const handleDelete = (itemId: number) => onDelete(list.id, itemId);
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-card px-4 shadow-sm select-none">
-      <div className="-mx-4 rounded-t-2xl bg-primary">
+    <section className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden rounded-2xl border border-border bg-surface-card px-4 shadow-sm select-none">
+      <div className="-mx-4 bg-primary">
         <h2 className="text-lg font-semibold bg-surface-heading text-text-on-heading text-center p-2">{list.name}</h2>
       </div>
       <AddNewItem listId={list.id} onAdd={onAdd} />
-      <TodoList
-        listId={list.id}
-        items={list.todoItems}
-        onToggle={handleToggle}
-        onDelete={handleDelete}
-      />
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <TodoList
+          listId={list.id}
+          items={list.todoItems}
+          onToggle={handleToggle}
+          onDelete={handleDelete}
+        />
+      </div>
     </section>
   );
 };

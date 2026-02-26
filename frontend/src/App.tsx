@@ -28,8 +28,8 @@ function App() {
   };
 
   return (
-    <main id="main-content" className="min-h-screen bg-surface p-4 md:p-6 lg:p-8">
-      <div className="mx-auto max-w-2xl">
+    <main id="main-content" className="flex h-screen flex-col overflow-hidden bg-surface p-4 md:p-6 lg:p-8">
+      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col min-h-0">
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-text-primary">My Todos</h1>
           <button
@@ -54,7 +54,7 @@ function App() {
             role="tabpanel"
             aria-labelledby={`tab-${activeTabId}`}
             key={activeTabId}
-            className="mt-4"
+            className="mt-4 flex-1 min-h-0 flex flex-col"
             style={{
               animation: 'slide-in-right 200ms ease-out',
             }}
