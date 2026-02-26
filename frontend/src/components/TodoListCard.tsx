@@ -14,7 +14,7 @@ export const TodoListCard = ({ list, onAdd, onToggle, onDelete }: TodoListCardPr
   const handleDelete = (itemId: number) => onDelete(list.id, itemId);
 
   return (
-    <section className="flex flex-col rounded-2xl border border-border bg-surface-card p-4 shadow-sm">
+    <section className="flex flex-col rounded-2xl border border-border bg-surface-card p-4 shadow-sm select-none">
       <h2 className="mb-3 text-lg font-semibold text-text-primary">{list.name}</h2>
       <AddNewItem listId={list.id} onAdd={onAdd} />
       <TodoList
