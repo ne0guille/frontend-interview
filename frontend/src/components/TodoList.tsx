@@ -1,5 +1,18 @@
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { TodoItem as TodoItemType } from '../types';
-import { TodoItem } from './TodoItem';
+import { SortableItem } from './SortableItem';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
 
 type TodoListProps = {
@@ -10,27 +23,42 @@ type TodoListProps = {
 };
 
 export const TodoList = ({ listId, items, onToggle, onDelete }: TodoListProps) => {
-  const { items: sortedItems, bindItem, bindList, bindEndZone, isDragOver } = useDragAndDrop(listId, items);
+  const { items: sortedItems, sortedIds, handleDragEnd } = useDragAndDrop(listId, items);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    }),
+    useSensor(KeyboardSensor),
+  );
 
   return (
-    <ul className="mt-3 flex flex-1 flex-col gap-2 pb-4" {...bindList}>
-      {sortedItems.map((item) => {
-        const drag = bindItem(item.id);
-        return (
-          <TodoItem
-            key={item.id}
-            {...item}
-            onToggle={onToggle}
-            onDelete={onDelete}
-            drag={drag}
-            isDragOver={isDragOver(item.id)}
-          />
-        );
-      })}
-      <li
-        className={`min-h-8 flex-1 list-none ${isDragOver('end') ? 'border-t-2 border-blue-400' : ''}`}
-        {...bindEndZone}
-      />
-    </ul>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
+        {sortedItems.length === 0 ? (
+          <p className="mt-3 flex flex-1 items-center justify-center text-text-muted pb-4">
+            No tasks have been entered yet
+          </p>
+        ) : (
+          <ul className="mt-3 flex flex-1 flex-col gap-2 pb-4">
+            {sortedItems.map((item) => (
+              <SortableItem
+                key={item.id}
+                {...item}
+                onToggle={onToggle}
+                onDelete={onDelete}
+              />
+            ))}
+          </ul>
+        )}
+      </SortableContext>
+    </DndContext>
   );
 };

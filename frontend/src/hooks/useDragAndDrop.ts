@@ -1,93 +1,43 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { moveItem, moveItemToEnd, readOrder, sortByOrder, writeOrder } from '../domain/todoOrder'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { moveItem, readOrder, sortByOrder, writeOrder } from '../domain/todoOrder'
 import { TodoItem } from '../types'
-import { DragProps } from '../types/drag'
+import type { DragEndEvent } from '@dnd-kit/core'
 
 export function useDragAndDrop(listId: number, items: TodoItem[]) {
-  const dragRef = useRef<number | null>(null)
-  const [dragOverId, setDragOverId] = useState<number | 'end' | null>(null)
-  const [order, setOrder] = useState<number[]>(() => readOrder(listId) ?? [])
+  const [order, setOrder] = useState<number[]>(() => readOrder(listId) ?? items.map(i => i.id))
 
   useEffect(() => {
-    writeOrder(listId, order)
+    setOrder(prev => {
+      const currentIds = new Set(items.map(i => i.id))
+      const prevSet = new Set(prev)
+
+      const filtered = prev.filter(id => currentIds.has(id))
+      const added = items.filter(i => !prevSet.has(i.id)).map(i => i.id)
+
+      if (added.length === 0 && filtered.length === prev.length) return prev
+      return [...filtered, ...added]
+    })
+  }, [items])
+
+  useEffect(() => {
+    if (order.length > 0) {
+      writeOrder(listId, order)
+    }
   }, [listId, order])
 
   const sortedItems = useMemo(() => sortByOrder(items, order), [items, order])
 
-  const resetDrag = useCallback(() => {
-    dragRef.current = null
-    setDragOverId(null)
+  const sortedIds = useMemo(() => sortedItems.map((i) => i.id), [sortedItems])
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const fromId = active.id as number
+    const toId = over.id as number
+
+    setOrder(prev => moveItem(prev, fromId, toId) ?? prev)
   }, [])
 
-  const moveToEnd = useCallback(() => {
-    const fromId = dragRef.current
-    if (fromId === null) return
-
-    setOrder(prev => moveItemToEnd(prev, fromId) ?? prev)
-    resetDrag()
-  }, [resetDrag])
-
-  const bindItem = useCallback(
-    (itemId: number): DragProps => ({
-      draggable: true,
-      onDragStart: () => {
-        dragRef.current = itemId
-      },
-      onDragOver: e => {
-        e.preventDefault()
-        setDragOverId(itemId)
-      },
-      onDrop: e => {
-        e.preventDefault()
-        e.stopPropagation()
-        const fromId = dragRef.current
-        if (fromId === null || fromId === itemId) return
-
-        setOrder(prev => {
-          const next = moveItem(prev, fromId, itemId)
-          return next ?? prev
-        })
-
-        resetDrag()
-      },
-      onDragEnd: resetDrag,
-    }),
-    [resetDrag]
-  )
-
-  const bindList = useMemo(
-    () => ({
-      onDragOver: (e: React.DragEvent) => {
-        e.preventDefault()
-      },
-      onDrop: (e: React.DragEvent) => {
-        e.preventDefault()
-        moveToEnd()
-      },
-    }),
-    [moveToEnd]
-  )
-
-  const bindEndZone = useMemo(
-    () => ({
-      onDragOver: (e: React.DragEvent) => {
-        e.preventDefault()
-        setDragOverId('end')
-      },
-      onDrop: (e: React.DragEvent) => {
-        e.preventDefault()
-        moveToEnd()
-      },
-      onDragLeave: () => {
-        setDragOverId(prev => (prev === 'end' ? null : prev))
-      },
-    }),
-    [moveToEnd]
-  )
-  const isDragOver = useCallback(
-    (id: number | 'end') => dragOverId === id,
-    [dragOverId])
-
-
-  return { items: sortedItems, bindItem, bindList, bindEndZone, isDragOver }
+  return { items: sortedItems, sortedIds, handleDragEnd }
 }

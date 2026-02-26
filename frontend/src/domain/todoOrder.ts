@@ -19,7 +19,7 @@ export function writeOrder(listId: number, ids: number[]) {
 }
 
 export function sortByOrder(items: TodoItem[], storedOrder: number[] | null): TodoItem[] {
-  if (!storedOrder) return items;
+  if (!storedOrder || storedOrder.length === 0) return items;
 
   const itemMap = new Map(items.map((item) => [item.id, item]));
   const ordered: TodoItem[] = [];
@@ -50,12 +50,3 @@ export function moveItem(ids: number[], fromId: number, toId: number): number[] 
   return result;
 }
 
-export function moveItemToEnd(ids: number[], fromId: number): number[] | null {
-  const fromIndex = ids.indexOf(fromId);
-  if (fromIndex === -1) return null;
-
-  const result = [...ids];
-  result.splice(fromIndex, 1);
-  result.push(fromId);
-  return result;
-}

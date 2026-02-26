@@ -1,12 +1,18 @@
 import './App.css'
+import { useRef } from 'react';
 import { useTodoList } from './hooks/useTodoList';
 import { useTheme } from './hooks/useTheme';
+import { useActiveTab } from './hooks/useActiveTab';
 import { TodoListCard } from './components/TodoListCard';
+import { TabBar } from './components/TabBar';
 
 function App() {
   const { todoListsQuery, deleteTodoItem, addTodoItem, toggleTodoItem } = useTodoList();
   const { isDark, toggleTheme } = useTheme();
   const todoLists = todoListsQuery.data ?? [];
+  const { activeList, activeTabId, setActiveTab } = useActiveTab(todoLists);
+
+  const prevTabId = useRef(activeTabId);
 
   const onAdd = async ({ listId, name }: { listId: number; name: string }) => {
     await addTodoItem.mutateAsync({ listId, data: { name } });
@@ -16,32 +22,51 @@ function App() {
     deleteTodoItem.mutate({ listId, itemId });
   };
 
+  const handleTabChange = (id: number) => {
+    if (id === activeTabId) return;
+    prevTabId.current = id;
+    setActiveTab(id);
+  };
+
   return (
     <main className="min-h-screen bg-surface p-4 md:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex justify-end">
+      <div className="mx-auto max-w-2xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h1 className="text-xl font-bold text-text-primary">My Todos</h1>
           <button
             type="button"
             onClick={toggleTheme}
-            className="rounded-lg bg-surface-card border border-border px-3 py-2 text-text-primary hover:bg-surface-hover"
+            className="flex w-11 h-11 items-center justify-center rounded-lg bg-surface-card border border-border text-text-primary hover:bg-surface-hover"
           >
             {isDark ? '☀️' : '🌙'}
           </button>
         </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
-          {todoLists.map((list) => (
+
+        <TabBar
+          lists={todoLists}
+          activeTabId={activeTabId}
+          onTabChange={handleTabChange}
+        />
+
+        {activeList && (
+          <div
+            key={activeTabId}
+            className="mt-4"
+            style={{
+              animation: 'slide-in-right 200ms ease-out',
+            }}
+          >
             <TodoListCard
-              key={list.id}
-              list={list}
+              list={activeList}
               onAdd={onAdd}
               onToggle={toggleTodoItem}
               onDelete={onDeleteItem}
             />
-          ))}
-        </div>
+          </div>
+        )}
       </div>
     </main>
-  )
+  );
 }
 
 export default App
