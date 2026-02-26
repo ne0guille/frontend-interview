@@ -1,99 +1,93 @@
-import { useState, useCallback, useRef, useMemo } from 'react';
-import { TodoItem } from '../types';
-import { DragProps } from '../types/drag';
-import { readOrder, writeOrder, sortByOrder, moveItem, moveItemToEnd } from '../domain/todoOrder';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { moveItem, moveItemToEnd, readOrder, sortByOrder, writeOrder } from '../domain/todoOrder'
+import { TodoItem } from '../types'
+import { DragProps } from '../types/drag'
 
 export function useDragAndDrop(listId: number, items: TodoItem[]) {
-  const draggedId = useRef<number | null>(null);
-  const [dragOverId, setDragOverId] = useState<number | 'end' | null>(null);
+  const dragRef = useRef<number | null>(null)
+  const [dragOverId, setDragOverId] = useState<number | 'end' | null>(null)
+  const [order, setOrder] = useState<number[]>(() => readOrder(listId) ?? [])
 
-  const storedOrder = readOrder(listId);
-  const orderedItems = useMemo(
-    () => sortByOrder(items, storedOrder),
-    [items, storedOrder]
-  );
-  const currentIds = orderedItems.map((item) => item.id);
-  const storedStr = storedOrder ? JSON.stringify(storedOrder) : null;
-  if (storedStr !== JSON.stringify(currentIds)) {
-    writeOrder(listId, currentIds);
-  }
+  useEffect(() => {
+    writeOrder(listId, order)
+  }, [listId, order])
 
-  const getDragProps = useCallback(
+  const orderedItems = useMemo(() => sortByOrder(items, order), [items, order])
+
+  const resetDrag = useCallback(() => {
+    dragRef.current = null
+    setDragOverId(null)
+  }, [])
+
+  const moveToEnd = useCallback(() => {
+    const fromId = dragRef.current
+    if (fromId === null) return
+
+    setOrder(prev => moveItemToEnd(prev, fromId) ?? prev)
+    resetDrag()
+  }, [resetDrag])
+
+  const bindItem = useCallback(
     (itemId: number): DragProps => ({
       draggable: true,
       onDragStart: () => {
-        draggedId.current = itemId;
+        dragRef.current = itemId
       },
-      onDragOver: (e) => {
-        e.preventDefault();
-        setDragOverId(itemId);
+      onDragOver: e => {
+        e.preventDefault()
+        setDragOverId(itemId)
       },
-      onDrop: (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const fromId = draggedId.current;
-        if (fromId === null || fromId === itemId) return;
+      onDrop: e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const fromId = dragRef.current
+        if (fromId === null || fromId === itemId) return
 
-        const ids = readOrder(listId) ?? orderedItems.map((i) => i.id);
-        const newIds = moveItem(ids, fromId, itemId);
-        if (newIds) writeOrder(listId, newIds);
+        setOrder(prev => {
+          const next = moveItem(prev, fromId, itemId)
+          return next ?? prev
+        })
 
-        draggedId.current = null;
-        setDragOverId(null);
+        resetDrag()
       },
-      onDragEnd: () => {
-        draggedId.current = null;
-        setDragOverId(null);
-      },
+      onDragEnd: resetDrag,
     }),
-    [listId, orderedItems],
-  );
+    [resetDrag]
+  )
 
-  const getListProps = useCallback(
+  const bindList = useMemo(
     () => ({
       onDragOver: (e: React.DragEvent) => {
-        e.preventDefault();
+        e.preventDefault()
       },
       onDrop: (e: React.DragEvent) => {
-        e.preventDefault();
-        const fromId = draggedId.current;
-        if (fromId === null) return;
-
-        const ids = readOrder(listId) ?? orderedItems.map((i) => i.id);
-        const newIds = moveItemToEnd(ids, fromId);
-        if (newIds) writeOrder(listId, newIds);
-
-        draggedId.current = null;
-        setDragOverId(null);
+        e.preventDefault()
+        moveToEnd()
       },
     }),
-    [listId, orderedItems],
-  );
+    [moveToEnd]
+  )
 
-  const getDropZoneProps = useCallback(
+  const bindEndZone = useMemo(
     () => ({
       onDragOver: (e: React.DragEvent) => {
-        e.preventDefault();
-        setDragOverId('end');
+        e.preventDefault()
+        setDragOverId('end')
       },
       onDrop: (e: React.DragEvent) => {
-        e.preventDefault();
-        const fromId = draggedId.current;
-        if (fromId === null) return;
-
-        const ids = readOrder(listId) ?? orderedItems.map((i) => i.id);
-        const newIds = moveItemToEnd(ids, fromId);
-        if (newIds) writeOrder(listId, newIds);
-
-        draggedId.current = null;
-        setDragOverId(null);
+        e.preventDefault()
+        moveToEnd()
       },
       onDragLeave: () => {
-        setDragOverId((prev) => (prev === 'end' ? null : prev));
+        setDragOverId(prev => (prev === 'end' ? null : prev))
       },
     }),
-    [listId, orderedItems],
-  );
+    [moveToEnd]
+  )
+  const isDragOver = useCallback(
+    (id: number | 'end') => dragOverId === id,
+    [dragOverId])
 
-  return { orderedItems, getDragProps, getListProps, getDropZoneProps, dragOverId };
+
+  return { orderedItems, bindItem, bindList, bindEndZone, isDragOver }
 }

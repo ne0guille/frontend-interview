@@ -1,7 +1,7 @@
 import './App.css'
 import { useTodoList } from './hooks/useTodoList';
 import { useTheme } from './hooks/useTheme';
-import { TodoListCard } from './components/TodoList';
+import { TodoListCard } from './components/TodoListCard';
 
 function App() {
   const { todoListsQuery, deleteTodoItem, addTodoItem, toggleTodoItem } = useTodoList();
