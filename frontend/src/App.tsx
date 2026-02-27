@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { useTodoList } from './hooks/useTodoList';
 import { useTheme } from './hooks/useTheme';
 import { useActiveTab } from './hooks/useActiveTab';
@@ -11,8 +10,6 @@ function App() {
   const todoLists = todoListsQuery.data ?? [];
   const { activeList, activeTabId, setActiveTab } = useActiveTab(todoLists);
 
-  const prevTabId = useRef(activeTabId);
-
   const onAdd = ({ listId, name }: { listId: number; name: string }) => {
     addTodoItem.mutate({ listId, data: { name } });
   }
@@ -23,7 +20,6 @@ function App() {
 
   const handleTabChange = (id: number) => {
     if (id === activeTabId) return;
-    prevTabId.current = id;
     setActiveTab(id);
   };
 

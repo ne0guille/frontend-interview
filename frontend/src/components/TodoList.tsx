@@ -21,16 +21,18 @@ type TodoListProps = {
   onToggle: (itemId: number) => void;
   onDelete: (itemId: number) => void;
 };
+const POINTER_CONSTRAINT = { distance: 8 }
+const TOUCH_CONSTRAINT = { delay: 200, tolerance: 5 }
 
 export const TodoList = ({ listId, items, onToggle, onDelete }: TodoListProps) => {
   const { items: sortedItems, sortedIds, handleDragEnd } = useDragAndDrop(listId, items);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
+      activationConstraint: POINTER_CONSTRAINT,
     }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 200, tolerance: 5 },
+      activationConstraint: TOUCH_CONSTRAINT,
     }),
     useSensor(KeyboardSensor),
   );

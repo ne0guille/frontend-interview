@@ -1,6 +1,7 @@
 import { TodoList as TodoListType } from '../types';
 import { TodoList } from './TodoList';
 import { AddNewItem } from './AddNewItem';
+import { useCallback } from 'react';
 
 type TodoListCardProps = {
   list: TodoListType;
@@ -10,9 +11,8 @@ type TodoListCardProps = {
 };
 
 export const TodoListCard = ({ list, onAdd, onToggle, onDelete }: TodoListCardProps) => {
-  const handleToggle = (itemId: number) => onToggle(list.id, itemId);
-  const handleDelete = (itemId: number) => onDelete(list.id, itemId);
-
+  const handleToggle = useCallback((itemId: number) => onToggle(list.id, itemId), [list.id, onToggle])
+  const handleDelete = useCallback((itemId: number) => onDelete(list.id, itemId), [list.id, onDelete])
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden rounded-2xl border border-border bg-surface-card px-4 shadow-sm select-none">
       <div className="-mx-4 bg-primary">

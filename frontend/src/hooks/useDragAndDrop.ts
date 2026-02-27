@@ -10,20 +10,14 @@ export function useDragAndDrop(listId: number, items: TodoItem[]) {
     setOrder(prev => {
       const currentIds = new Set(items.map(i => i.id))
       const prevSet = new Set(prev)
-
       const filtered = prev.filter(id => currentIds.has(id))
       const added = items.filter(i => !prevSet.has(i.id)).map(i => i.id)
-
       if (added.length === 0 && filtered.length === prev.length) return prev
-      return [...filtered, ...added]
+      const next = [...filtered, ...added]
+      writeOrder(listId, next)
+      return next
     })
-  }, [items])
-
-  useEffect(() => {
-    if (order.length > 0) {
-      writeOrder(listId, order)
-    }
-  }, [listId, order])
+  }, [items, listId])
 
   const sortedItems = useMemo(() => sortByOrder(items, order), [items, order])
 
@@ -37,7 +31,8 @@ export function useDragAndDrop(listId: number, items: TodoItem[]) {
     const toId = over.id as number
 
     setOrder(prev => moveItem(prev, fromId, toId) ?? prev)
-  }, [])
+    writeOrder(listId, order)
+  }, [listId, order])
 
   return { items: sortedItems, sortedIds, handleDragEnd }
 }

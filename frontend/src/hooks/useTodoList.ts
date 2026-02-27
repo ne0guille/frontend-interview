@@ -14,6 +14,30 @@ const todoListsKey = ['todoLists'] as const;
 export function useTodoList() {
   const queryClient = useQueryClient();
 
+  function optimisticMutation<TVars>(options: {
+    mutationFn: (vars: TVars) => Promise<unknown>;
+    updater: (lists: TodoList[], vars: TVars) => TodoList[];
+  }) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return useMutation({
+      mutationFn: options.mutationFn,
+      onMutate: async (vars: TVars) => {
+        await queryClient.cancelQueries({ queryKey: todoListsKey });
+        const previous = queryClient.getQueryData<TodoList[]>(todoListsKey);
+        queryClient.setQueryData<TodoList[]>(todoListsKey, (old) =>
+          old ? options.updater(old, vars) : old
+        );
+        return { previous };
+      },
+      onError: (_err: unknown, _vars: TVars, context: { previous?: TodoList[] } | undefined) => {
+        if (context?.previous) queryClient.setQueryData(todoListsKey, context.previous);
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: todoListsKey });
+      },
+    });
+  }
+
   const todoListsQuery = useQuery({
     queryKey: todoListsKey,
     queryFn: todoListService.getAllTodoLists,
@@ -35,69 +59,22 @@ export function useTodoList() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: todoListsKey }),
   });
 
-  const addTodoItem = useMutation({
-    mutationFn: ({ listId, data }: { listId: number; data: AddTodoItemDto }) =>
-      todoListService.addTodoItem(listId, data),
-    onMutate: async ({ listId, data }) => {
-      await queryClient.cancelQueries({ queryKey: todoListsKey });
-      const previous = queryClient.getQueryData<TodoList[]>(todoListsKey);
+  const addTodoItem = optimisticMutation<{ listId: number; data: AddTodoItemDto }>({
+    mutationFn: ({ listId, data }) => todoListService.addTodoItem(listId, data),
+    updater: (lists, { listId, data }) => {
       const tempItem = { id: -Date.now(), name: data.name, description: '', done: false };
-      queryClient.setQueryData<TodoList[]>(todoListsKey, (old) =>
-        old ? addItemToList(old, listId, tempItem) : old
-      );
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.previous) queryClient.setQueryData(todoListsKey, context.previous);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: todoListsKey });
+      return addItemToList(lists, listId, tempItem);
     },
   });
 
-  const updateTodoItem = useMutation({
-    mutationFn: ({
-      listId,
-      itemId,
-      data,
-    }: {
-      listId: number;
-      itemId: number;
-      data: UpdateTodoItemDto;
-    }) => todoListService.updateTodoItem(listId, itemId, data),
-    onMutate: async ({ listId, itemId, data }) => {
-      await queryClient.cancelQueries({ queryKey: todoListsKey });
-      const previous = queryClient.getQueryData<TodoList[]>(todoListsKey);
-      queryClient.setQueryData<TodoList[]>(todoListsKey, (old) =>
-        old ? updateItemInLists(old, listId, itemId, data) : old
-      );
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.previous) queryClient.setQueryData(todoListsKey, context.previous);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: todoListsKey });
-    },
+  const updateTodoItem = optimisticMutation<{ listId: number; itemId: number; data: UpdateTodoItemDto }>({
+    mutationFn: ({ listId, itemId, data }) => todoListService.updateTodoItem(listId, itemId, data),
+    updater: (lists, { listId, itemId, data }) => updateItemInLists(lists, listId, itemId, data),
   });
 
-  const deleteTodoItem = useMutation({
-    mutationFn: ({ listId, itemId }: { listId: number; itemId: number }) =>
-      todoListService.deleteTodoItem(listId, itemId),
-    onMutate: async ({ listId, itemId }) => {
-      await queryClient.cancelQueries({ queryKey: todoListsKey });
-      const previous = queryClient.getQueryData<TodoList[]>(todoListsKey);
-      queryClient.setQueryData<TodoList[]>(todoListsKey, (old) =>
-        old ? removeItemFromLists(old, listId, itemId) : old
-      );
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.previous) queryClient.setQueryData(todoListsKey, context.previous);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: todoListsKey });
-    },
+  const deleteTodoItem = optimisticMutation<{ listId: number; itemId: number }>({
+    mutationFn: ({ listId, itemId }) => todoListService.deleteTodoItem(listId, itemId),
+    updater: (lists, { listId, itemId }) => removeItemFromLists(lists, listId, itemId),
   });
 
   const toggleTodoItem = (listId: number, itemId: number) => {
